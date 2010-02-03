@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aop>
+	<!-- Tracking. The content of this file has to be merged with
+	WEBEDIT_HOME/config/aop.xml -->
+	<replace pointcut="f_persistentdocument_PersistentProviderMySql"
+		class="tracker_PersistentProviderMySQL" />
+	<replace pointcut="f_persistentdocument_PersistentProviderOci"
+		class="tracker_PersistentProviderOci" />
+
+	<after pointcut="emailing_ReadSendingAction::_execute" class="tracker_ReadSendingTracker"
+		method="execute" />
+	<after pointcut="emailing_RedirectToUrlAction::_execute" class="tracker_RedirectToUrlTracker"
+		method="execute" />
+	<before pointcut="website_RewriteUrlAction::_execute" class="tracker_ViewUrlTracker"
+		method="execute" />
+
+	<after-returning pointcut="customer_BlockCreateaccountAction::executeSave"
+		class="tracker_CustomerAccountTracker" method="createFromCreateBlock" />
+	<after-returning pointcut="order_BlockIdentifyStepAction::executeCreateAccount"
+		class="tracker_CustomerAccountTracker" method="createFromIdentifyStep" />
+
+	<before pointcut="order_CartService::addProduct" class="tracker_CartManagementTracker"
+		method="addProduct" />
+
+	<before pointcut="order_BlockIdentifyStepAction::execute" class="tracker_OrderProcessTracker"
+		method="start" />
+
+	<before pointcut="payment_ConnectorService::setPaymentResult"
+		class="tracker_OrderProcessTracker" method="end" />
+</aop>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<buildpath>
+	<buildpathentry kind="con" path="org.eclipse.php.core.LANGUAGE"/>
+	<buildpathentry combineaccessrules="false" kind="prj" path="/users-3.0.0"/>
+	<buildpathentry kind="src" path="setup"/>
+	<buildpathentry kind="src" path="lib/services"/>
+	<buildpathentry combineaccessrules="false" kind="prj" path="/framework-3.0.0"/>
+</buildpath>

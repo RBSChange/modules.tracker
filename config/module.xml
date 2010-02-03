@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+	<module>
+		<enabled>true</enabled>
+		<visible>true</visible>
+		<icon>package</icon>
+		<usetopic>false</usetopic>
+	</module>
+	<projectconfig>
+		<modules>
+			<tracker>
+				<collectors>
+					<!--
+					SessionActor collector is hard coded 
+					<entry name="session">tracker_SessionActorCollector</entry>
+					 -->
+					<entry name="frontuser">tracker_FrontendUserActorCollector</entry>
+					<entry name="backuser">tracker_BackendUserActorCollector</entry>
+					<entry name="customer">tracker_CustomerActorCollector</entry>
+				</collectors>
+			</tracker>
+		</modules>
+	</projectconfig>
+</config>
