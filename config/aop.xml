@@ -27,4 +27,7 @@
 
 	<before pointcut="payment_ConnectorService::setPaymentResult"
 		class="tracker_OrderProcessTracker" method="end" />
+		
+	<before pointcut="ads_ClickAction::_execute"
+		class="tracker_ClickOnBannerTracker" method="createFromClickAction" />
 </aop>

@@ -2,7 +2,6 @@
 /**
  * <after pointcut="emailing_ReadSendingAction::_execute"
  *        class="tracker_ReadSendingTracker" method="execute" />
- *
  */
 class tracker_ReadSendingTracker
 {
