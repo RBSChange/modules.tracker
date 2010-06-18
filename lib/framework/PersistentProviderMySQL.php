@@ -41,7 +41,7 @@ class tracker_PersistentProviderMySQL extends f_persistentdocument_PersistentPro
 		return $this->trackConnection;
 	}
 
-	private function closeTrackerConnection()
+	public function closeTrackerConnection()
 	{
 		$this->trackConnection = null;
 	}
