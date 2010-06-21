@@ -30,4 +30,7 @@
 		
 	<before pointcut="ads_ClickAction::_execute"
 		class="tracker_ClickOnBannerTracker" method="createFromClickAction" />
+		
+	<before pointcut="marketing_ClickOnAnimationAction::_execute"
+		class="tracker_ClickOnAnimationTracker" method="createFromClickAction" />
 </aop>

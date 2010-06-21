@@ -4,20 +4,12 @@
 		<locale lang="fr">tracker</locale>
 		<locale lang="en">tracker</locale>
 	</entity>
-
 	<entity id="tree-root-name">
 		<locale lang="fr">tracker</locale>
 		<locale lang="en">tracker</locale>
 	</entity>
-
 	<entity id="system-folder-name">
 		<locale lang="fr">tracker</locale>
 		<locale lang="en">tracker</locale>
 	</entity>
-
-	<!--
-	<entity id="">
-		<locale lang="fr"></locale>
-	</entity>
-	-->
 </localization>
