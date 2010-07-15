@@ -22,8 +22,10 @@ class tracker_OrderProcessTracker
 	 */
 	function end($response, $order)
 	{
+		$user = $order->getPaymentUser();
+		$customer = customer_CustomerService::getInstance()->getByUser($user);
 		$actorsCollector = tracker_ActorsCollector::getInstance();
-		$actorsCollector->addActorId("customer_customer:".$order->getCustomer()->getId());
+		$actorsCollector->addActorId("customer_customer:".$customer->getId());
 		
 		$vars = array("order" => $order);
 		tracker_Logger::log("order_orderprocess_end", $vars);
