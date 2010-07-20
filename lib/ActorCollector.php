@@ -91,7 +91,7 @@ class tracker_ActorsCollector
 	private function loadCollectors()
 	{
 		$collectors = array();
-		foreach (Framework::getConfigurationValue("modules/tracker/collectors") as $collectorName)
+		foreach (Framework::getConfigurationValue("modules/tracker/collectors", array()) as $collectorName)
 		{
 			$collectors[] = new $collectorName();
 		}
