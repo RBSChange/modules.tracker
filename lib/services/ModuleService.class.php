@@ -24,6 +24,18 @@ class tracker_ModuleService extends ModuleBaseService
 
 	function computeLogs()
 	{
+		if (defined("TRACKER_MODE") && TRACKER_MODE == "mysql")
+		{
+			$this->computeLogsWithMySql();
+		}
+		else 
+		{
+			$this->computeLogsWithMongo();
+		}
+	}
+	
+	public function computeLogsWithMySql()
+	{
 		// TODO OK : this should use some extra methods on PersistentProvider to permit OCI and others....
 		// TODO: this is a very naive approach (..)
 		$pp = f_persistentdocument_PersistentProvider::getInstance();
@@ -65,6 +77,7 @@ class tracker_ModuleService extends ModuleBaseService
 						$getEquals->execute();
 						$ids = array_merge($ids, $getEquals->fetchAll(PDO::FETCH_COLUMN));
 						$idsCount = count($ids);
+						
 						for ($k = 0; $k < $idsCount; $k++)
 						{
 							for ($l = $k+1; $l < $idsCount; $l++)
@@ -166,6 +179,159 @@ class tracker_ModuleService extends ModuleBaseService
 				$insertComputed->execute();
 			}
 		}
+	}
+	
+	public function computeLogsWithMongo()
+	{
+		// database connection
+		$connectionString = null;
+		$config = Framework::getConfiguration("mongoDB");
+		
+		if (isset($config["authentication"]["username"]) && isset($config["authentication"]["password"]) && 
+			$config["authentication"]["username"] !== '' && $config["authentication"]["password"] !== '')
+		{
+			$connectionString .= $config["authentication"]["username"].':'.$config["authentication"]["password"].'@';
+		}
+		
+		$connectionString .= implode(",", $config["serversCacheService"]);
+		
+		if ($connectionString != null)
+		{
+			$connectionString = "mongodb://".$connectionString;
+		}
+		
+		try
+		{
+			$mongoInstance = new Mongo($connectionString/*, array("persistent" => "mongo")*/);
+			$trackCol = $mongoInstance->$config["database"]["name"]->trackerLogs;
+			$computeCol = $mongoInstance->$config["database"]["name"]->computedTrackerLogs;
+		}
+		catch (MongoConnnectionException $e)
+		{
+			Framework::exception($e);
+		}
+		
+		$logs = $trackCol->find();
+		$compute = $computeCol->find();
+		
+		foreach ($logs as $log)
+		{
+			$isComputed = false;
+			foreach ($compute as $c)
+			{
+				$isEqual = false;
+				foreach ($log["actorIds"] as $act)
+				{
+					if (in_array($act, $c["actorIds"]))
+					{
+						$isEqual = true;
+						break;
+					}
+				}
+				
+				if ($isEqual)
+				{	
+					$actorIds = array_unique(array_merge($c["actorIds"], $log["actorIds"]));
+					$logEvent = array($log["event"] => array($log["vars"]));
+					$c["events"] = array_merge_recursive($c["events"], $logEvent);
+					try
+					{
+						$computeCol->update(array("_id" => new MongoId($c["_id"])), 
+							array('$set' => array("actorIds" => $actorIds, "events" => $c["events"])),
+							array("safe" => true));
+					}
+					catch (MongoCursorException $e)
+					{
+						echo " => Update failed\n";
+						Framework::exception($e);
+					}
+					$isComputed = true;
+					break;
+				}
+			}
+			
+			if (!$isComputed)
+			{
+				try
+				{
+					$computeCol->insert(array("actorIds" => $log["actorIds"], "events" => array($log["event"] => array($log["vars"]))),
+						array("safe" => true));
+				}
+				catch (MongoCursorException $e)
+				{
+					echo " => Insert failed\n";
+					Framework::exception($e);
+				}
+			}
+		}
+		$this->consolidate($computeCol);
+		echo "computedTrackerLogs collection updated\n";
+		$trackCol->drop();
+		echo "trackerLogs collection cleaned\n";
+		$mongoInstance->close();
+		echo "End\n\n";
+	}
+	
+	public function consolidate($computeCol)
+	{
+		$compute = $computeCol->find();
+		
+		foreach ($compute as $c)
+		{
+			foreach ($compute as $c2)
+			{
+				if ($c["_id"] != $c2["_id"])
+				{
+					$isEqual = false;
+					foreach ($c["actorIds"] as $act)
+					{
+						if (in_array($act, $c2["actorIds"]))
+						{
+							$isEqual = true;
+							break;
+						}
+					}
+					if ($isEqual)
+					{
+						$actorIds = array_unique(array_merge($c["actorIds"], $c2["actorIds"]));
+						$events = array_merge_recursive($c["events"], $c2["events"]);
+						try
+						{
+							$computeCol->insert(array("actorIds" => $actorIds, "events" => $events),
+								array("safe" => true));
+							$computeCol->remove(array("_id" => new MongoId($c["_id"])));
+							$computeCol->remove(array("_id" => new MongoId($c2["_id"])));
+						}
+						catch (MongoCursorException $e)
+						{
+							echo " => Consolidation failed\n";
+							Framework::exception($e);
+						}
+					}
+				}
+			}
+			
+			/*foreach ($c["events"] as $event => $eventVars)
+			{
+				$newVars = array();
+				foreach ($eventVars as $vars)
+				{
+					$newVars = array_merge_recursive($newVars, $vars);
+					try
+					{
+						$computeCol->update(array("_id" => new MongoId($c["_id"])), 
+							array('$set' => array("events.".$event => $newVars)),
+							array("safe" => true));
+					}
+					catch (MongoCursorException $e)
+					{
+						echo " => Consolidation failed\n";
+						Framework::exception($e);
+					}
+				}
+			}*/
+		}
+		echo "Consolidation\n";
 	}
 
 	/**
