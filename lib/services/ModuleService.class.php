@@ -193,7 +193,7 @@ class tracker_ModuleService extends ModuleBaseService
 			$connectionString .= $config["authentication"]["username"].':'.$config["authentication"]["password"].'@';
 		}
 		
-		$connectionString .= implode(",", $config["serversCacheService"]);
+		$connectionString .= implode(",", $config["serversDataCacheServiceWrite"]);
 		
 		if ($connectionString != null)
 		{
@@ -202,7 +202,14 @@ class tracker_ModuleService extends ModuleBaseService
 		
 		try
 		{
-			$mongoInstance = new Mongo($connectionString/*, array("persistent" => "mongo")*/);
+			if ($config["modeCluster"])
+			{
+				$mongoInstance = new Mongo($connectionString, array("replicaSet" => true));
+			}
+			else 
+			{
+				$mongoInstance = new Mongo($connectionString);
+			}
 			$trackCol = $mongoInstance->$config["database"]["name"]->trackerLogs;
 			$computeCol = $mongoInstance->$config["database"]["name"]->computedTrackerLogs;
 		}

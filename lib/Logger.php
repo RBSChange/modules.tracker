@@ -54,16 +54,12 @@ class tracker_Logger
 	
 	private static function trackWithMongo($sessionId, $event, $actorIds, $vars)
 	{
-		//array_push($actorIds, $sessionId);
 		$actorIds = array_values($actorIds);
 		$actorIds[] = $sessionId;
 		$vars["time"] = time();
 		try
 		{
 			self::getMongo()->insert(array("event" => $event, "actorIds" => $actorIds, "vars" => $vars));
-			/*self::getMongo()->update(array("sessionId" => $sessionId), 
-				array("event" => $event, "actorIds" => $actorIds, "vars" => $vars), 
-				array("upsert" => true, "safe" => true));*/
 		}
 		catch (MongoCursorException $e)
 		{
@@ -87,7 +83,7 @@ class tracker_Logger
 				$connectionString .= $config["authentication"]["username"].':'.$config["authentication"]["password"].'@';
 			}
 			
-			$connectionString .= implode(",", $config["serversCacheService"]);
+			$connectionString .= implode(",", $config["serversDataCacheServiceWrite"]);
 			
 			if ($connectionString != null)
 			{
@@ -96,7 +92,14 @@ class tracker_Logger
 			
 			try
 			{
-				self::$mongoDB = new Mongo($connectionString, array("persistent" => "mongo"));
+				if ($config["modeCluster"])
+				{
+					self::$mongoDB = new Mongo($connectionString, array("replicaSet" => true));
+				}
+				else 
+				{
+					self::$mongoDB = new Mongo($connectionString);
+				}
 				self::$mongoCollection = self::$mongoDB->$config["database"]["name"]->trackerLogs;
 			}
 			catch (MongoConnnectionException $e)
