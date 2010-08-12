@@ -1,7 +1,7 @@
 <?php
 class tracker_Logger
 {
-	private static $mongoDB = null;
+	//private static $mongoDB = null;
 	private static $mongoCollection = null;
 	private static $methodToUse = null;
 	//private static $shutdownRegistered = false;
@@ -72,7 +72,7 @@ class tracker_Logger
 	 */
 	private static function getMongo()
 	{
-		if (self::$mongoDB === null)
+		/*if (self::$mongoDB === null)
 		{
 			$connectionString = null;
 			$config = Framework::getConfiguration("mongoDB");
@@ -92,7 +92,7 @@ class tracker_Logger
 			
 			try
 			{
-				if ($config["modeCluster"])
+				if ($config["modeCluster"] && false)
 				{
 					self::$mongoDB = new Mongo($connectionString, array("replicaSet" => true));
 				}
@@ -106,6 +106,10 @@ class tracker_Logger
 			{
 				Framework::exception($e);
 			}
+		}*/
+		if (self::$mongoCollection === null)
+		{
+			self::$mongoCollection = f_MongoProvider::getInstance()->getMongo(true)->trackerLogs;
 		}
 		return self::$mongoCollection;
 	}

@@ -184,7 +184,7 @@ class tracker_ModuleService extends ModuleBaseService
 	public function computeLogsWithMongo()
 	{
 		// database connection
-		$connectionString = null;
+		/*$connectionString = null;
 		$config = Framework::getConfiguration("mongoDB");
 		
 		if (isset($config["authentication"]["username"]) && isset($config["authentication"]["password"]) && 
@@ -216,11 +216,16 @@ class tracker_ModuleService extends ModuleBaseService
 		catch (MongoConnnectionException $e)
 		{
 			Framework::exception($e);
-		}
+		}*/
+		$mongo = f_MongoProvider::getInstance()->getMongo(true);
+		$trackCol = $mongo->trackerLogs;
+		$computeCol = $mongo->computedTrackerLogs;
+		unset($mongo);
 		
 		$logs = $trackCol->find();
 		$compute = $computeCol->find();
 		
+		echo "Processing...\n";
 		foreach ($logs as $log)
 		{
 			$isComputed = false;
@@ -275,8 +280,6 @@ class tracker_ModuleService extends ModuleBaseService
 		echo "computedTrackerLogs collection updated\n";
 		$trackCol->drop();
 		echo "trackerLogs collection cleaned\n";
-		$mongoInstance->close();
-		echo "End\n\n";
 	}
 	
 	public function consolidate($computeCol)
