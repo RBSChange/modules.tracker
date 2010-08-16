@@ -184,40 +184,7 @@ class tracker_ModuleService extends ModuleBaseService
 	public function computeLogsWithMongo()
 	{
 		// database connection
-		/*$connectionString = null;
-		$config = Framework::getConfiguration("mongoDB");
-		
-		if (isset($config["authentication"]["username"]) && isset($config["authentication"]["password"]) && 
-			$config["authentication"]["username"] !== '' && $config["authentication"]["password"] !== '')
-		{
-			$connectionString .= $config["authentication"]["username"].':'.$config["authentication"]["password"].'@';
-		}
-		
-		$connectionString .= implode(",", $config["serversDataCacheServiceWrite"]);
-		
-		if ($connectionString != null)
-		{
-			$connectionString = "mongodb://".$connectionString;
-		}
-		
-		try
-		{
-			if ($config["modeCluster"])
-			{
-				$mongoInstance = new Mongo($connectionString, array("replicaSet" => true));
-			}
-			else 
-			{
-				$mongoInstance = new Mongo($connectionString);
-			}
-			$trackCol = $mongoInstance->$config["database"]["name"]->trackerLogs;
-			$computeCol = $mongoInstance->$config["database"]["name"]->computedTrackerLogs;
-		}
-		catch (MongoConnnectionException $e)
-		{
-			Framework::exception($e);
-		}*/
-		$mongo = f_MongoProvider::getInstance()->getMongo(true);
+		$mongo = f_MongoProvider::getInstance()->getWriteMongo();
 		$trackCol = $mongo->trackerLogs;
 		$computeCol = $mongo->computedTrackerLogs;
 		unset($mongo);
@@ -342,6 +309,168 @@ class tracker_ModuleService extends ModuleBaseService
 			}*/
 		}
 		echo "Consolidation\n";
+	}
+	
+	public function getProductInfos($product, $minTime = null, $maxTime = null)
+	{
+		$mongo = f_MongoProvider::getInstance()->getMongo()->computedTrackerLogs;
+		
+		if ($minTime === null)
+		{
+			$minTime = 0;
+		}
+		if ($maxTime === null)
+		{
+			$maxTime = time();
+		}
+		
+		$object = $mongo->find(array("events.order_cart_addproduct.product" => $product, 
+									 "events.order_cart_addproduct.time" => array('$gt' => $minTime, '$lt' => $maxTime)), 
+							   array("actorIds" => true, "events.order_cart_addproduct.quantity" => true, 
+							   		 "events.order_cart_addproduct.time" => true, 
+							   		 "events.order_cart_addproduct.product" => true));
+		
+		$results = array();
+		foreach ($object as $result)
+		{
+			$infos = array();
+			foreach ($result["events"]["order_cart_addproduct"] as $res)
+			{
+				if ($res["product"] == $product && $res["time"] > $minTime && $res["time"] < $maxTime)
+				{
+					$infos[] = array("time" => $res["time"], "quantity" => $res["quantity"]);
+				}
+			}
+			
+			$results[] = array("actorIds" => $result["actorIds"], "infos" => $infos);
+		}
+		//f_util_FileUtils::writeAndCreateContainer(f_util_FileUtils::buildLogPath("test.log"), var_export($results, true), f_util_FileUtils::OVERRIDE);
+		return f_util_ArrayUtils::isEmpty($results) ? null : $results;
+	}
+	
+	public function getUrlInfos($url, $minTime = null, $maxTime = null)
+	{
+		$mongo = f_MongoProvider::getInstance()->getMongo()->computedTrackerLogs;
+		
+		if ($minTime === null)
+		{
+			$minTime = 0;
+		}
+		if ($maxTime === null)
+		{
+			$maxTime = time();
+		}
+		
+		$object = $mongo->find(array("events.website_viewurl.url" => $url, 
+									 "events.website_viewurl.time" => array('$gt' => $minTime, '$lt' => $maxTime)), 
+							   array("actorIds" => true, "events.website_viewurl.method" => true, 
+							   		 "events.website_viewurl.time" => true, "events.website_viewurl.url" => true));
+		
+		$results = array();
+		foreach ($object as $result)
+		{
+			$infos = array();
+			foreach ($result["events"]["website_viewurl"] as $res)
+			{
+				if ($res["url"] == $url && $res["time"] > $minTime && $res["time"] < $maxTime)
+				{
+					$infos[] = array("time" => $res["time"], "method" => $res["method"]);
+				}
+			}
+			
+			$results[] = array("actorIds" => $result["actorIds"], "infos" => $infos);
+		}
+		//f_util_FileUtils::writeAndCreateContainer(f_util_FileUtils::buildLogPath("test.log"), var_export($results, true), f_util_FileUtils::OVERRIDE);
+		return f_util_ArrayUtils::isEmpty($results) ? null : $results;
+	}
+	
+	public function getUserInfos($user, $minTime = null, $maxTime = null)
+	{
+		$mongo = f_MongoProvider::getInstance()->getMongo()->computedTrackerLogs;
+		
+		if ($minTime === null)
+		{
+			$minTime = 0;
+		}
+		if ($maxTime === null)
+		{
+			$maxTime = time();
+		}
+		if (!is_array($user))
+		{
+			$user = array($user);
+		}
+		
+		$object = $mongo->find(array("actorIds" => array('$in' => $user)));
+		
+		$results = array();
+		foreach ($object as $result)
+		{
+			$infos = array();
+			foreach ($result["events"] as $name => $event)
+			{
+				foreach ($event as $res)
+				{
+					if ($res["time"] > $minTime && $res["time"] < $maxTime)
+					{
+						$infos[$name][] = $res;
+					}
+				}
+			}
+			if (f_util_ArrayUtils::isNotEmpty($infos))
+			{
+				$results[] = array("actorIds" => $result["actorIds"], "infos" => $infos);
+			}
+		}
+		//f_util_FileUtils::writeAndCreateContainer(f_util_FileUtils::buildLogPath("test.log"), var_export($results, true), f_util_FileUtils::OVERRIDE);
+		return f_util_ArrayUtils::isEmpty($results) ? null : $results;
+	}
+	
+	public function getPeriodInfos($minTime = null, $maxTime = null)
+	{
+		$mongo = f_MongoProvider::getInstance()->getMongo()->computedTrackerLogs;
+		
+		if ($minTime === null)
+		{
+			$minTime = 0;
+		}
+		if ($maxTime === null)
+		{
+			$maxTime = time();
+		}
+		
+		$object = $mongo->find(array('$where' => "for each(event in this.events)
+													{
+														for each(i in event)
+														{
+															if(i.time > $minTime && i.time < $maxTime)
+															{
+																return true;
+															}
+														}
+													};"));
+		
+		$results = array();
+		foreach ($object as $result)
+		{
+			$infos = array();
+			foreach ($result["events"] as $name => $event)
+			{
+				foreach ($event as $res)
+				{
+					if ($res["time"] > $minTime && $res["time"] < $maxTime)
+					{
+						$infos[$name][] = $res;
+					}
+				}
+			}
+			if (f_util_ArrayUtils::isNotEmpty($infos))
+			{
+				$results[] = array("actorIds" => $result["actorIds"], "infos" => $infos);
+			}
+		}
+		//f_util_FileUtils::writeAndCreateContainer(f_util_FileUtils::buildLogPath("test.log"), var_export($results, true), f_util_FileUtils::OVERRIDE);
+		return f_util_ArrayUtils::isEmpty($results) ? null : $results;
 	}
 
 	/**

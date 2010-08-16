@@ -1,38 +1,19 @@
 <?php
 class tracker_Logger
 {
-	//private static $mongoDB = null;
-	private static $mongoCollection = null;
-	private static $methodToUse = null;
-	//private static $shutdownRegistered = false;
-	//private static $logs = array();
+	private static $shutdownRegistered = false;
+	private static $logs = array();
 	
 	static function log($event, $vars = array())
 	{
+		self::registerShutdown();
 		$collector = tracker_ActorsCollector::getInstance();
 		$actorIds = $collector->getActorIds();
 		$sessionId = $collector->getSessionId();
-		/*$actorIdsStr = (f_util_ArrayUtils::isNotEmpty($actorIds)) ? join(",", $actorIds) : null;
-		f_persistentdocument_PersistentProvider::getInstance()->track($sessionId, $event, $actorIdsStr, JsonService::getInstance()->encode($vars));*/
-		
-		//self::$logs[] = array("sessionId" => $sessionId, "event" => $event, "actorIds" => $actorIds, "vars" => $vars);
-		
-		if (self::$methodToUse === null)
-		{
-			if (defined("TRACKER_MODE") && TRACKER_MODE == "mysql")
-			{
-				self::$methodToUse = "trackWithMySql";
-			}
-			else 
-			{
-				self::$methodToUse = "trackWithMongo";
-			}
-		}
-		$track = self::$methodToUse;
-		self::$track($sessionId, $event, $actorIds, $vars);
+		self::$logs[] = array("sessionId" => $sessionId, "event" => $event, "actorIds" => $actorIds, "vars" => $vars);
 	}
 	
-	/*static function shutdownLog()
+	static function shutdownLog()
 	{
 		if (defined("TRACKER_MODE") && TRACKER_MODE == "mysql")
 		{
@@ -44,82 +25,45 @@ class tracker_Logger
 		}
 		
 		self::$track();
-	}*/
-	
-	private static function trackWithMySql($sessionId, $event, $actorIds, $vars)
-	{
-		$actorIdsStr = (f_util_ArrayUtils::isNotEmpty($actorIds)) ? join(",", $actorIds) : null;
-		f_persistentdocument_PersistentProvider::getInstance()->track($sessionId, $event, $actorIdsStr, JsonService::getInstance()->encode($vars));
 	}
 	
-	private static function trackWithMongo($sessionId, $event, $actorIds, $vars)
+	private static function trackWithMySql()
 	{
-		$actorIds = array_values($actorIds);
-		$actorIds[] = $sessionId;
-		$vars["time"] = time();
-		try
+		foreach (self::$logs as $log)
 		{
-			self::getMongo()->insert(array("event" => $event, "actorIds" => $actorIds, "vars" => $vars));
-		}
-		catch (MongoCursorException $e)
-		{
-			Framework::exception($e);
+			$actorIdsStr = (f_util_ArrayUtils::isNotEmpty($log["actorIds"])) ? join(",", $log["actorIds"]) : null;
+			f_persistentdocument_PersistentProvider::getInstance()->track($log["sessionId"], $log["event"], $actorIdsStr, JsonService::getInstance()->encode($log["vars"]));
 		}
 	}
 	
-	/**
-	 * @return MongoCollection
-	 */
-	private static function getMongo()
+	private static function trackWithMongo()
 	{
-		/*if (self::$mongoDB === null)
+		if (f_util_ArrayUtils::isNotEmpty(self::$logs))
 		{
-			$connectionString = null;
-			$config = Framework::getConfiguration("mongoDB");
-			
-			if (isset($config["authentication"]["username"]) && isset($config["authentication"]["password"]) && 
-				$config["authentication"]["username"] !== '' && $config["authentication"]["password"] !== '')
+			$mongoCollection = f_MongoProvider::getInstance()->getWriteMongo()->trackerLogs;
+			foreach (self::$logs as $log)
 			{
-				$connectionString .= $config["authentication"]["username"].':'.$config["authentication"]["password"].'@';
-			}
-			
-			$connectionString .= implode(",", $config["serversDataCacheServiceWrite"]);
-			
-			if ($connectionString != null)
-			{
-				$connectionString = "mongodb://".$connectionString;
-			}
-			
-			try
-			{
-				if ($config["modeCluster"] && false)
+				$actorIds = array_values($log["actorIds"]);
+				$actorIds[] = $log["sessionId"];
+				$log["vars"]["time"] = time();
+				try
 				{
-					self::$mongoDB = new Mongo($connectionString, array("replicaSet" => true));
+					$mongoCollection->insert(array("event" => $log["event"], "actorIds" => $actorIds, "vars" => $log["vars"]));
 				}
-				else 
+				catch (MongoCursorException $e)
 				{
-					self::$mongoDB = new Mongo($connectionString);
+					Framework::exception($e);
 				}
-				self::$mongoCollection = self::$mongoDB->$config["database"]["name"]->trackerLogs;
 			}
-			catch (MongoConnnectionException $e)
-			{
-				Framework::exception($e);
-			}
-		}*/
-		if (self::$mongoCollection === null)
-		{
-			self::$mongoCollection = f_MongoProvider::getInstance()->getMongo(true)->trackerLogs;
 		}
-		return self::$mongoCollection;
 	}
 	
-	/*private function registerShutdown()
+	private static function registerShutdown()
 	{
 		if (!self::$shutdownRegistered)
 		{
 			register_shutdown_function(array('tracker_Logger','shutdownLog'));
 			self::$shutdownRegistered = true;
 		}
-	}*/
+	}
 }
