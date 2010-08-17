@@ -46,14 +46,14 @@ class tracker_Logger
 				$actorIds = array_values($log["actorIds"]);
 				$actorIds[] = $log["sessionId"];
 				$log["vars"]["time"] = time();
-				try
-				{
+				/*try
+				{*/
 					$mongoCollection->insert(array("event" => $log["event"], "actorIds" => $actorIds, "vars" => $log["vars"]));
-				}
+				/*}
 				catch (MongoCursorException $e)
 				{
 					Framework::exception($e);
-				}
+				}*/
 			}
 		}
 	}

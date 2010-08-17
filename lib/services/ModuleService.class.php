@@ -439,16 +439,19 @@ class tracker_ModuleService extends ModuleBaseService
 			$maxTime = time();
 		}
 		
-		$object = $mongo->find(array('$where' => "for each(event in this.events)
-													{
-														for each(i in event)
-														{
-															if(i.time > $minTime && i.time < $maxTime)
-															{
-																return true;
-															}
-														}
-													};"));
+		$object = $mongo->find(array('$where' => new MongoCode("for each(event in this.events)
+																{
+																	for each(i in event)
+																	{
+																		if(i.time > minTime && i.time < maxTime)
+																		{
+																			return true;
+																		}
+																	}
+																}
+																return false;", 
+																array("minTime" => $minTime,
+																	  "maxTime" => $maxTime))));
 		
 		$results = array();
 		foreach ($object as $result)
