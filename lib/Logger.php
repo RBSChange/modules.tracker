@@ -6,6 +6,7 @@ class tracker_Logger
 	
 	static function log($event, $vars = array())
 	{
+		Framework::info(__METHOD__);
 		self::registerShutdown();
 		$collector = tracker_ActorsCollector::getInstance();
 		$actorIds = $collector->getActorIds();
@@ -15,16 +16,13 @@ class tracker_Logger
 	
 	static function shutdownLog()
 	{
-		if (defined("TRACKER_MODE") && TRACKER_MODE == "mysql")
+		Framework::info(__METHOD__);
+		if (Framework::hasConfiguration('modules/tracker/mongoDB'))
 		{
-			$track = "trackWithMySql";
+			self::trackWithMongo();
+			return;
 		}
-		else 
-		{
-			$track = "trackWithMongo";
-		}
-		
-		self::$track();
+		self::trackWithMySql();
 	}
 	
 	private static function trackWithMySql()
@@ -38,22 +36,17 @@ class tracker_Logger
 	
 	private static function trackWithMongo()
 	{
+		Framework::info(__METHOD__);
 		if (f_util_ArrayUtils::isNotEmpty(self::$logs))
 		{
-			$mongoCollection = f_MongoProvider::getInstance()->getWriteMongo()->trackerLogs;
+			$provider = new f_MongoProvider(Framework::getConfiguration('modules/tracker/mongoDB'));
+			$mongoCollection = $provider->getCollection('trackerLogs', true);
 			foreach (self::$logs as $log)
 			{
 				$actorIds = array_values($log["actorIds"]);
 				$actorIds[] = $log["sessionId"];
 				$log["vars"]["time"] = time();
-				/*try
-				{*/
-					$mongoCollection->insert(array("event" => $log["event"], "actorIds" => $actorIds, "vars" => $log["vars"]));
-				/*}
-				catch (MongoCursorException $e)
-				{
-					Framework::exception($e);
-				}*/
+				$mongoCollection->insert(array("event" => $log["event"], "actorIds" => $actorIds, "vars" => $log["vars"]));
 			}
 		}
 	}
