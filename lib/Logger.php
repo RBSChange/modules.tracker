@@ -6,7 +6,6 @@ class tracker_Logger
 	
 	static function log($event, $vars = array())
 	{
-		Framework::info(__METHOD__);
 		self::registerShutdown();
 		$collector = tracker_ActorsCollector::getInstance();
 		$actorIds = $collector->getActorIds();
@@ -16,7 +15,6 @@ class tracker_Logger
 	
 	static function shutdownLog()
 	{
-		Framework::info(__METHOD__);
 		if (Framework::hasConfiguration('modules/tracker/mongoDB'))
 		{
 			self::trackWithMongo();
@@ -36,7 +34,6 @@ class tracker_Logger
 	
 	private static function trackWithMongo()
 	{
-		Framework::info(__METHOD__);
 		if (f_util_ArrayUtils::isNotEmpty(self::$logs))
 		{
 			$provider = new f_MongoProvider(Framework::getConfiguration('modules/tracker/mongoDB'));
