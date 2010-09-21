@@ -108,9 +108,9 @@ class tracker_SessionActorCollector implements tracker_ActorCollector
 	{
 		if (!isset($_SESSION["tracker_firsthittime"]))
 		{
-			$_SESSION["tracker_firsthittime"] = time();
+			$_SESSION["tracker_firsthittime"] = time()."_".session_id();
 		}
-		return $_SESSION["tracker_firsthittime"]."_".session_id();
+		return $_SESSION["tracker_firsthittime"];
 	}
 
 	/**

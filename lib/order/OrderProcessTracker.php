@@ -27,7 +27,12 @@ class tracker_OrderProcessTracker
 		$actorsCollector = tracker_ActorsCollector::getInstance();
 		$actorsCollector->addActorId("customer_customer:".$customer->getId());
 		
-		$vars = array("order" => $order);
+		$vars = array("order" => array('paymentId' => $order->getPaymentId(),
+			'paymentReference'  => $order->getPaymentReference(),
+			'transactionId' => $response->getTransactionId(),
+			'amount' => $response->getAmount(),
+			'currency' => $response->getCurrency()));
+		
 		tracker_Logger::log("order_orderprocess_end", $vars);
 		
 		if ($response->isAccepted())
