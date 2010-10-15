@@ -41,8 +41,6 @@ class tracker_Logger
 	}
 }
 
-
-
 class tracker_LoggerPDOMysql 
 {
 	/**
@@ -57,8 +55,6 @@ class tracker_LoggerPDOMysql
 		$database = isset($connectionInfos['database']) ? $connectionInfos['database'] : null;
 		$password = isset($connectionInfos['password']) ? $connectionInfos['password'] : null;
 		$username = isset($connectionInfos['user']) ? $connectionInfos['user'] : null;
-
-		$dsn = $protocol.':';
 		
 		if ($database !== null)
 		{
@@ -86,7 +82,6 @@ class tracker_LoggerPDOMysql
 		}
 		return $pdo;
 	}
-	
 	
 	/**
 	 * @return PDO
@@ -602,4 +597,3 @@ class tracker_LoggerMongo
 		return f_util_ArrayUtils::isEmpty($results) ? null : $results;
 	}
 }
-
