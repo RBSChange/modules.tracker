@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://www.rbs.fr/schema/change-component/1.0 http://www.rbschange.fr/static/schema/change-component/1.0.xsd">
 	<name>tracker</name>
 	<type>change-module</type>
-	<version>3.0.4</version>
+	<version>3.0.5</version>
 	<license>com</license>
 	<repository>public</repository>
 	<description>Tracker module</description>
@@ -11,7 +11,7 @@
 		<dependency>
 			<name>change-lib/framework</name>
 			<versions>
-				<version>3.0.4</version>
+				<version>3.0.5</version>
 			</versions>
 		</dependency>
 	</dependencies>
