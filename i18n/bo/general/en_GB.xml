@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<i18n baseKey="m.tracker.bo.general" lcid="en_GB">
+  <key id="module-name">tracker</key>
+  <key id="tree-root-name">tracker</key>
+  <key id="system-folder-name">tracker</key>
+</i18n>
