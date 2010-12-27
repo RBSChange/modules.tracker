@@ -4,4 +4,4 @@ CREATE TABLE IF NOT EXISTS `tracker_logs_vars` (
 `value` varchar(255),
 KEY (`log_id`),
 KEY (`name`)
-) TYPE=MyISAM CHARACTER SET utf8 COLLATE utf8_bin;
+) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_bin;

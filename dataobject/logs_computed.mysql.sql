@@ -4,4 +4,4 @@ CREATE TABLE IF NOT EXISTS `tracker_logs_computed` (
 `actor_id` varchar(50) character set latin1 collate latin1_general_ci NOT NULL,
 KEY  (`log_id`),
 KEY  (`actor_type`, `actor_id`)
-) TYPE=MyISAM CHARACTER SET utf8 COLLATE utf8_bin;
+) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_bin;

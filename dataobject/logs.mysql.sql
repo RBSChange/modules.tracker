@@ -6,4 +6,4 @@ CREATE TABLE IF NOT EXISTS `tracker_logs` (
 `actor_ids` TEXT character set latin1 collate latin1_general_ci NULL,
 `vars` TEXT NOT NULL,
 PRIMARY KEY  (`id`)
-) TYPE=MyISAM CHARACTER SET utf8 COLLATE utf8_bin;
+) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_bin;
